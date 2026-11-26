@@ -3584,6 +3584,42 @@ fn local_text_edits_match_fresh_pagination() {
 }
 
 #[test]
+fn typing_after_a_trailing_page_break_matches_full_layout_through_history() {
+    let mut doc = wordcraft_doc::Document::from_text("before\u{c}\nafter");
+    doc.styles.default_chr.font = Some("Source Sans 3".into());
+    doc.styles.default_chr.size = Some(12.0);
+    let mut s = Session::new(doc);
+    s.view.proofing = false;
+    s.sel = crate::Selection::caret(Pos::body(0, "before\u{c}".len()));
+    let before = s.layout();
+    assert_eq!(before.index[&(StoryRef::Body, wordcraft_doc::Path::top(0))].len(), 1, "the trailing paragraph mark stays with the break");
+    for (id, expected) in [
+        ("text.insert", "before\u{c}a"),
+        ("edit.undo", "before\u{c}"),
+        ("edit.redo", "before\u{c}a"),
+        ("text.backspace", "before\u{c}"),
+        ("edit.undo", "before\u{c}a"),
+        ("edit.redo", "before\u{c}"),
+    ] {
+        run(&mut s, id, json!({"text": "a"}));
+        assert_eq!(s.doc.para_at(&Pos::body(0, 0)).unwrap().text, expected, "{id}");
+        let cached = s.layout();
+        s.relayout();
+        let full = s.layout();
+        assert_eq!(cached.pages.len(), full.pages.len(), "{id}");
+        assert_eq!(cached.index, full.index, "{id}: paragraph pieces must be on the same pages");
+        let p = s.doc.para_at(&Pos::body(0, 0)).unwrap();
+        for off in p.text.char_indices().map(|(off, _)| off).chain(std::iter::once(p.len())) {
+            let pos = Pos::body(0, off);
+            assert_eq!(cached.caret(&pos), full.caret(&pos), "{id}: offset {off}");
+        }
+        let start = s.doc.start_of(StoryRef::Body);
+        let end = s.doc.end_of(StoryRef::Body);
+        assert_eq!(cached.selection_rects(&s.doc, &start, &end, 0), full.selection_rects(&s.doc, &start, &end, 0), "{id}");
+    }
+}
+
+#[test]
 fn visible_selection_matches_the_full_range_on_each_page() {
     use crate::cmd::table_mouse::{selection_rects, selection_rects_on_pages};
     let mut s = Session::new(wordcraft_doc::Document::from_text(&"abc אבג 中文\n".repeat(120)));

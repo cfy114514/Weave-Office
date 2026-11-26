@@ -1,5 +1,7 @@
 # WordCraft roadmap
 
+> **Last reviewed / updated · 2026-11-26.** PR #46 follow-up: body paragraphs with manual page or column breaks use full pagination after text edits. Ordinary manual line breaks and safe fixed-table edits retain incremental layout. Added pagination/history, nested-table comparison and visible-selection regressions; readiness estimates unchanged.
+
 > **Performance update · 2026-11-20.** Paragraph navigation follows the current path through nested tables. The canvas reuses page positions and content-control ranges while scrolling. Text edits with unchanged line geometry reuse the other pages. Selection highlights are calculated for the visible pages.
 
 > **Highlight update:** 2026-10-25 · Highlight shortcut toggles the last chosen colour off when the whole selection has it; explicit colour commands remain setters (#4085). Readiness estimates unchanged.
@@ -226,6 +228,7 @@ Imported Word 97–2003 `.doc`/`.dot` files now ask for a supported DOCX target 
 
 | Date | What landed |
 |---|---|
+| 2026-11-26 | Fixed incremental pagination after a trailing manual page break; added full-layout comparisons through editing history and cross-page/table selection coverage. |
 | 2026-11-20 | Reduced idle, selection scrolling and local text editing work in the hosted document editor. [Frame measurements](docs/layout-parity.md#performance) |
 | 2026-10-28 | **Arabic diacritic editing (#4757):** Backspace removes the last stored Arabic combining mark, so its base letter can stay while the mark is replaced. Caret movement and forward Delete keep their cluster rules. Synthetic command, history, protection and native/DOCX fresh-reopen checks; no native Word comparison or readiness change. |
 | 2026-10-29 | Insert › Shapes shows the basic shapes as a grid of code-drawn icon tiles, each with an accessible name and tooltip, instead of a text list (#4349) |
@@ -684,6 +687,7 @@ Footer page-table height and body wrapping are corrected. Other pagination gaps 
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-11-26 | minor | PR #46 follow-up: retain full pagination for body hard-break paragraphs, with positive controls for ordinary line breaks and nested fixed cells. Add history, nested-path and visible-selection regression coverage. |
 | 2026-11-20 | minor | Paragraph navigation follows the current path through nested tables. The canvas reuses page positions and content-control ranges while scrolling. Text edits with unchanged line geometry reuse the other pages. Selection highlights are calculated for the visible pages. |
 | 2026-10-31 | trivial | Progress log: a paragraph naming an undefined DOCX style is formatted as Normal (#5077) |
 | 2026-10-31 | trivial | Progress log: TOC page numbers are PAGEREF fields (#5097) |
