@@ -319,6 +319,35 @@ fn same_content_sees_every_change() {
 }
 
 #[test]
+fn single_paragraph_comparison_keeps_nested_table_boundaries() {
+    let mut outer = Table::new(2, 2, 360.0);
+    outer.rows[0].cells[1].blocks.insert(0, Arc::new(Block::Table(Table::new(2, 2, 180.0))));
+    let mut original = Document::from_text("outside");
+    original.body.insert(0, Arc::new(Block::Table(outer)));
+    let edited = Path(vec![0, 0, 1, 0, 1, 1, 0]);
+    let mut changed = original.clone();
+    changed.insert_text(&Pos::new(StoryRef::Body, edited.clone(), 0), "typed", &CharProps::default()).unwrap();
+    assert!(original.same_except_paragraph(&changed, &edited));
+    // No other paragraph, at any nesting level, is covered by the exception.
+    for path in original.para_paths(StoryRef::Body).into_iter().filter(|p| *p != edited) {
+        let mut two_edits = changed.clone();
+        two_edits.insert_text(&Pos::new(StoryRef::Body, path.clone(), 0), "other", &CharProps::default()).unwrap();
+        assert!(!original.same_except_paragraph(&two_edits, &edited), "other paragraph: {path}");
+    }
+    for table_path in [Path::top(0), Path(vec![0, 0, 1, 0])] {
+        let mut wider = changed.clone();
+        wider.table_mut(StoryRef::Body, &table_path).unwrap().grid[0] += 10.0;
+        assert!(!original.same_except_paragraph(&wider, &edited), "table grid: {table_path}");
+        let mut fewer_rows = changed.clone();
+        fewer_rows.table_mut(StoryRef::Body, &table_path).unwrap().rows.remove(0);
+        assert!(!original.same_except_paragraph(&fewer_rows, &edited), "removed row: {table_path}");
+    }
+    for wrong in [Path::default(), Path::top(0), Path(vec![0, 0, 1]), Path(vec![0, 0, 1, 0, 1, 9, 0])] {
+        assert!(!original.same_except_paragraph(&changed, &wrong), "invalid exception: {wrong}");
+    }
+}
+
+#[test]
 fn json_round_trip() {
     let mut d = Document::from_text("Hello\nWorld");
     d.format_range(&Pos::body(0, 0), &Pos::body(0, 5), &|c| c.bold = Some(true)).unwrap();

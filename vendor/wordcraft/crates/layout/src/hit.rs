@@ -1026,6 +1026,10 @@ fn score(l: &LineHit, x: f32, y: f32) -> f32 {
 }
 
 #[cfg(test)]
+#[path = "hit_viewport_tests.rs"]
+mod viewport_tests;
+
+#[cfg(test)]
 mod object_index_tests {
     use super::*;
 
